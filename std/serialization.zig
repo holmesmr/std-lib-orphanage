@@ -104,7 +104,7 @@ pub fn Deserializer(comptime endian: builtin.Endian, comptime packing: Packing, 
             const T = @TypeOf(ptr);
             comptime assert(trait.is(.Pointer)(T));
 
-            if (comptime trait.isSlice(T) or comptime trait.isPtrTo(.Array)(T)) {
+            if (comptime trait.isSlice(T) or trait.isPtrTo(.Array)(T)) {
                 for (ptr) |*v|
                     try self.deserializeInto(v);
                 return;
@@ -157,7 +157,6 @@ pub fn Deserializer(comptime endian: builtin.Endian, comptime packing: Packing, 
                         inline for (info.fields) |field_info| {
                             if (@enumToInt(@field(TagType, field_info.name)) == tag) {
                                 const name = field_info.name;
-                                const FieldType = field_info.field_type;
                                 ptr.* = @unionInit(C, name, undefined);
                                 try self.deserializeInto(&@field(ptr, name));
                                 return;
@@ -321,7 +320,6 @@ pub fn Serializer(comptime endian: builtin.Endian, comptime packing: Packing, co
                         inline for (info.fields) |field_info| {
                             if (@field(TagType, field_info.name) == active_tag) {
                                 const name = field_info.name;
-                                const FieldType = field_info.field_type;
                                 try self.serialize(@field(value, name));
                                 return;
                             }
@@ -338,7 +336,6 @@ pub fn Serializer(comptime endian: builtin.Endian, comptime packing: Packing, co
                     }
                     try self.serializeInt(@as(u1, @boolToInt(true)));
 
-                    const OC = comptime meta.Child(T);
                     const val_ptr = &value.?;
                     try self.serialize(val_ptr.*);
                 },
